@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>أثيـر | هويتك الرقمية ببساطة</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <style>
+      :root {
+        --bg: #FFFFFF;
+        --fg: #1D1D1F;
+        --card-bg: #FFFFFF;
+        --card-border: rgba(0, 0, 0, 0.08);
+        --input-bg: #F5F5F7;
+        --accent: #0071E3;
+        --accent-fg: #FFFFFF;
+        --radius: 22px;
+        --font-main: 'IBM Plex Sans Arabic', sans-serif;
+        --font-display: 'IBM Plex Sans Arabic', sans-serif;
+        --shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+      }
+
+      body {
+        font-family: var(--font-main);
+        background-color: var(--bg);
+        color: var(--fg);
+        transition: background-color 0.5s ease, color 0.5s ease;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* Fix for Tailwind text colors in themes */
+      .text-gray-400, .text-gray-500 { color: var(--fg) !important; opacity: 0.5; }
+      .bg-white { background-color: var(--card-bg) !important; }
+
+      .apple-card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        color: var(--fg);
+      }
+      
+      .apple-input {
+        background: var(--input-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 14px;
+        padding: 16px;
+        color: var(--fg);
+        transition: all 0.3s ease;
+      }
+      .apple-input::placeholder {
+        color: var(--fg);
+        opacity: 0.4;
+      }
+      .apple-input:focus {
+        background: var(--card-bg);
+        border-color: var(--accent);
+        box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
+        outline: none;
+      }
+
+      .apple-button {
+        background: var(--input-bg);
+        color: var(--fg);
+        border-radius: 16px;
+        font-weight: 600;
+        padding: 14px 24px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        border: 1px solid var(--card-border);
+      }
+      .apple-button.primary {
+        background: var(--accent);
+        color: var(--accent-fg);
+        border: none;
+        box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
+      }
+      [data-theme="dark"] .apple-button.primary {
+        box-shadow: 0 4px 15px rgba(10, 132, 255, 0.4);
+      }
+      .apple-button:hover { transform: translateY(-2px); opacity: 0.9; }
+      .apple-button:active { transform: scale(0.98); }
+
+      /* Theme Overrides */
+      [data-theme="dark"] {
+        --bg: #000000;
+        --fg: #F5F5F7;
+        --card-bg: #1C1C1E;
+        --card-border: rgba(255, 255, 255, 0.15);
+        --input-bg: #2C2C2E;
+        --accent: #0A84FF;
+        --accent-fg: #FFFFFF;
+        --shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+      }
+
+      [data-theme="muslim"] {
+        --bg: #FDFBF7;
+        --fg: #434338;
+        --card-bg: #FFFFFF;
+        --card-border: rgba(67, 67, 56, 0.1);
+        --input-bg: #F3EFE0;
+        --accent: #5A5A40;
+        --accent-fg: #FFFFFF;
+        --font-display: 'Playfair Display', serif;
+        --font-main: 'IBM Plex Sans Arabic', sans-serif;
+        --radius: 32px;
+      }
+      [data-theme="muslim"] h1, [data-theme="muslim"] h2 { font-family: var(--font-display); }
+
+      [data-theme="glass"] {
+        --bg: #F2F2F7;
+        --fg: #1D1D1F;
+        --card-bg: rgba(255, 255, 255, 0.6);
+        --card-border: rgba(255, 255, 255, 0.4);
+        --input-bg: rgba(0, 0, 0, 0.05);
+        --accent: #0071E3;
+        --accent-fg: #FFFFFF;
+        --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      }
+
+      .glass-effect {
+        background-color: var(--card-bg);
+        backdrop-filter: saturate(180%) blur(20px);
+        -webkit-backdrop-filter: saturate(180%) blur(20px);
+        border-color: var(--card-border);
+      }
+
+      /* Sidebar Refinement */
+      #sidebar {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 300px;
+        background: var(--card-bg);
+        border-left: 1px solid var(--card-border);
+        color: var(--fg);
+        z-index: 500;
+        transform: translateX(100%);
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      #sidebar.active {
+        transform: translateX(0);
+      }
+
+      .sidebar-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(4px);
+        z-index: 400;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.4s ease;
+      }
+      .sidebar-overlay.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .nav-item {
+        color: var(--fg);
+        opacity: 0.7;
+        transition: all 0.2s ease;
+      }
+      .nav-item:hover {
+        opacity: 1;
+        background: var(--input-bg);
+      }
+
+      /* View Control */
+      .view {
+        display: none;
+      }
+      .view.active {
+        display: block;
+      }
+
+      /* Animations */
+      .fade-in {
+        animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      /* Loading Overlay */
+      #loading-overlay {
+        position: fixed;
+        inset: 0;
+        background: var(--bg);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.5s ease;
+      }
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid var(--input-bg);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+  </head>
+  <body data-theme="light">
+    <div id="loading-overlay">
+      <div class="spinner"></div>
+    </div>
+
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="ui.toggleSidebar()"></div>
+
+    <aside id="sidebar" class="p-8 flex flex-col glass-effect overflow-y-auto">
+      <div class="flex justify-between items-center mb-12">
+        <span class="text-2xl font-bold tracking-tight">القائمة</span>
+        <button onclick="ui.toggleSidebar()" class="p-2 hover:bg-black/5 rounded-full transition">
+          <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+      </div>
+      
+      <div id="sidebar-profile-edit" class="mb-10 hidden">
+        <h3 class="text-sm font-bold opacity-40 uppercase tracking-widest mb-4">تعديل الملف الشخصي</h3>
+        <div class="space-y-6">
+          <div class="flex flex-col items-center gap-4">
+            <div class="relative group cursor-pointer" onclick="document.getElementById('avatar-upload').click()">
+              <div class="w-20 h-20 rounded-full overflow-hidden border-2 border-accent shadow-lg bg-[var(--input-bg)]">
+                <img id="sidebar-avatar-preview" src="" class="w-full h-full object-cover" referrerPolicy="no-referrer">
+              </div>
+              <div class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition rounded-full">
+                <i data-lucide="camera" class="text-white w-5 h-5"></i>
+              </div>
+            </div>
+            <input type="file" id="avatar-upload" hidden accept="image/*" onchange="dashboard.handleImageUpload(this, 'avatar')">
+            <button onclick="document.getElementById('banner-upload').click()" class="apple-button text-xs py-2 px-4">تغيير الغلاف</button>
+            <input type="file" id="banner-upload" hidden accept="image/*" onchange="dashboard.handleImageUpload(this, 'banner')">
+          </div>
+          
+          <div class="space-y-4">
+            <div>
+              <label class="block text-[10px] font-bold opacity-40 uppercase tracking-widest mb-1 mr-1">اسم المستخدم (الرابط المباشر)</label>
+              <input type="text" id="sidebar-username-input" class="apple-input w-full text-sm" placeholder="مثلاً: mohammed" onchange="dashboard.updateProfile('username', this.value)">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold opacity-40 uppercase tracking-widest mb-1 mr-1">عنوان الصفحة</label>
+              <input type="text" id="sidebar-title-input" class="apple-input w-full text-sm font-bold" placeholder="عنوان الصفحة" onchange="dashboard.updateProfile('title', this.value)">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold opacity-40 uppercase tracking-widest mb-1 mr-1">نبذة تعريفية</label>
+              <textarea id="sidebar-bio-input" class="apple-input w-full h-20 text-sm resize-none" placeholder="نبذة تعريفية" onchange="dashboard.updateProfile('bio', this.value)"></textarea>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-bold opacity-40 uppercase tracking-widest mb-3 mr-1">قوالب أحاديث للغلاف (1920x1080)</label>
+            <div id="hadith-templates" class="grid grid-cols-3 gap-2">
+              </div>
+            <p class="text-[9px] opacity-40 mt-2 mr-1">المقاس الموصى به للغلاف: 1920x1080 بكسل</p>
+          </div>
+        </div>
+      </div>
+
+      <nav class="flex flex-col gap-2 flex-1">
+        <button onclick="router.navigate('dashboard'); ui.toggleSidebar()" class="nav-item flex items-center gap-4 p-4 rounded-2xl font-medium text-right">
+          <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+          <span>لوحة التحكم</span>
+        </button>
+        <button onclick="router.navigate('themes'); ui.toggleSidebar()" class="nav-item flex items-center gap-4 p-4 rounded-2xl font-medium text-right">
+          <i data-lucide="palette" class="w-5 h-5"></i>
+          <span>المظاهر</span>
+        </button>
+        <button onclick="router.navigate('share'); ui.toggleSidebar()" class="nav-item flex items-center gap-4 p-4 rounded-2xl font-medium text-right">
+          <i data-lucide="share-2" class="w-5 h-5"></i>
+          <span>مشاركة</span>
+        </button>
+        
+        <div class="my-6 border-t border-black/5 pt-6">
+          <button onclick="router.navigate('public'); ui.toggleSidebar()" class="nav-item flex items-center gap-4 p-4 rounded-2xl font-medium text-right text-blue-500">
+            <i data-lucide="external-link" class="w-5 h-5"></i>
+            <span>معاينة الصفحة</span>
+          </button>
+        </div>
+      </nav>
+
+      <div class="pt-8 border-t border-black/5">
+        <button onclick="auth.logout()" class="flex items-center gap-4 p-4 rounded-2xl hover:bg-[var(--input-bg)] text-red-500 transition w-full text-right font-bold">
+          <i data-lucide="log-out" class="w-5 h-5"></i>
+          <span>تسجيل الخروج</span>
+        </button>
+      </div>
+    </aside>
+
+    <div id="app">
+      <nav class="glass-effect sticky top-0 z-50 px-6 py-5 flex justify-between items-center border-b border-black/5">
+        <div id="nav-left">
+          <button onclick="router.navigate('dashboard'); ui.toggleSidebar()" class="p-2 hover:bg-black/5 rounded-full transition">
+            <i data-lucide="user" class="w-6 h-6"></i>
+          </button>
+        </div>
+        
+        <div class="flex items-center gap-4">
+          <span class="text-2xl font-bold tracking-tight">أثيـر</span>
+          <button onclick="ui.toggleSidebar()" class="p-2 hover:bg-black/5 rounded-full transition">
+            <i data-lucide="menu" class="w-6 h-6"></i>
+          </button>
+        </div>
+      </nav>
+
+      <main class="max-w-xl mx-auto px-6 py-8">
+        
+        <section id="view-landing" class="view active text-center py-16 fade-in">
+          <h1 class="text-5xl md:text-6xl font-bold mb-6 tracking-tight leading-tight">هويتك الرقمية،<br><span class="text-gray-400">ببساطة مطلقة.</span></h1>
+          <p class="text-lg text-gray-500 mb-12 max-w-sm mx-auto leading-relaxed">أنشئ صفحة روابط مخصصة تعكس هويتك. تصميم أبل، روح إسلامية، تحكم كامل عبر أثيـر.</p>
+          <div class="flex flex-col gap-4 items-center">
+            <button onclick="router.navigate('auth')" class="apple-button primary px-12 py-4 text-lg shadow-xl w-full max-w-xs">ابدأ الآن</button>
+            <p class="text-sm text-gray-400">مجاني للأبد. لا حاجة لبطاقة ائتمان.</p>
+          </div>
+        </section>
+
+        <section id="view-auth" class="view fade-in">
+          <div class="apple-card p-8 shadow-2xl border-none">
+            <h2 id="auth-title" class="text-3xl font-bold mb-2">تسجيل الدخول</h2>
+            <p id="auth-desc" class="text-gray-500 mb-8">أهلاً بك مجدداً في أثيـر.</p>
+            <form id="auth-form" class="space-y-4">
+              <div class="flex flex-col">
+                <input type="email" id="auth-email" placeholder="البريد الإلكتروني" class="apple-input w-full" required>
+                <p id="auth-email-error" class="text-red-500 text-xs mt-1 mr-1 hidden"></p>
+              </div>
+              <div class="flex flex-col">
+                <input type="password" id="auth-password" placeholder="كلمة المرور" class="apple-input w-full" required>
+                <p id="auth-password-error" class="text-red-500 text-xs mt-1 mr-1 hidden"></p>
+              </div>
+            <button type="submit" id="auth-submit" class="apple-button primary w-full py-4 text-lg mt-4">دخول</button>
+            </form>
+            <div class="mt-8 text-center">
+              <button onclick="auth.toggleMode()" id="auth-toggle" class="text-gray-400 hover:text-black transition font-medium">ليس لديك حساب؟ سجل الآن</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-dashboard" class="view fade-in">
+          <div class="flex justify-between items-center mb-10">
+            <div>
+              <h2 class="text-3xl font-bold mb-1">أثيـر</h2>
+              <p class="text-gray-400 text-sm">إدارة وتنسيق روابطك الخاصة.</p>
+            </div>
+            <button onclick="dashboard.openAddModal()" class="w-12 h-12 apple-button primary rounded-full shadow-lg">
+              <i data-lucide="plus" class="w-6 h-6"></i>
+            </button>
+          </div>
+          
+          <div id="links-list" class="space-y-4">
+            </div>
+        </section>
+
+        <section id="view-themes" class="view fade-in">
+          <h2 class="text-3xl font-bold mb-2">المظاهر</h2>
+          <p class="text-gray-400 mb-10">اختر المظهر الذي يناسب شخصيتك.</p>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <button onclick="themes.set('light')" class="apple-card p-6 flex flex-col items-center gap-3 hover:scale-[1.02]">
+              <div class="w-full h-24 bg-white border border-gray-100 rounded-xl"></div>
+              <span class="font-bold">ناصع</span>
+            </button>
+            <button onclick="themes.set('dark')" class="apple-card p-6 flex flex-col items-center gap-3 hover:scale-[1.02] bg-gray-900 text-white">
+              <div class="w-full h-24 bg-gray-800 rounded-xl"></div>
+              <span class="font-bold">داكن</span>
+            </button>
+            <button onclick="themes.set('muslim')" class="apple-card p-6 flex flex-col items-center gap-3 hover:scale-[1.02] bg-[#fdfaf6]">
+              <div class="w-full h-24 bg-[#C2B280] rounded-xl opacity-20"></div>
+              <span class="font-bold">صحراوي</span>
+            </button>
+            <button onclick="themes.set('glass')" class="apple-card p-6 flex flex-col items-center gap-3 hover:scale-[1.02] bg-gray-100">
+              <div class="w-full h-24 bg-white/50 backdrop-blur-md rounded-xl"></div>
+              <span class="font-bold">زجاجي</span>
+            </button>
+          </div>
+        </section>
+
+        <section id="view-share" class="view fade-in text-center">
+          <h2 class="text-3xl font-bold mb-2">مشاركة الصفحة</h2>
+          <p class="text-gray-400 mb-12">شارك صفحتك مع العالم عبر الرابط أو رمز QR.</p>
+          
+          <div class="apple-card p-10 mb-8 flex flex-col items-center shadow-sm">
+            <div id="qrcode-container" class="bg-white p-4 rounded-2xl mb-8 shadow-inner"></div>
+            <div class="flex flex-col gap-3 w-full">
+              <button onclick="share.copyLink()" class="apple-button primary w-full py-4">
+                <i data-lucide="copy" class="w-5 h-5"></i>
+                نسخ الرابط
+              </button>
+              <button onclick="share.downloadQR()" class="apple-button w-full py-4">
+                <i data-lucide="download" class="w-5 h-5"></i>
+                تحميل رمز QR
+              </button>
+            </div>
+          </div>
+          <p id="share-link-text" class="text-gray-400 text-sm break-all font-mono"></p>
+        </section>
+
+        <section id="view-public" class="view min-h-screen py-20 px-6 text-center">
+           </section>
+
+      </main>
+    </div>
+
+    <div id="modal-container" class="fixed inset-0 z-[300] hidden flex items-center justify-center p-6">
+      <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="ui.closeModal()"></div>
+      <div class="apple-card w-full max-w-md p-8 relative z-10 shadow-2xl fade-in overflow-y-auto max-h-[90vh]">
+        <h3 id="modal-title" class="text-2xl font-bold mb-6">إضافة رابط</h3>
+        
+        <div class="space-y-6">
+          <div>
+            <label class="block text-sm font-bold mb-2 mr-1">العنوان</label>
+            <input type="text" id="link-title" class="apple-input w-full" placeholder="مثلاً: متجري الإلكتروني">
+          </div>
+          <div>
+            <label class="block text-sm font-bold mb-2 mr-1">الرابط (URL)</label>
+            <input type="url" id="link-url" class="apple-input w-full" placeholder="https://...">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-bold mb-2 mr-1">الأيقونة</label>
+            <div id="icon-picker" class="grid grid-cols-5 gap-3 p-4 bg-[var(--input-bg)] rounded-2xl max-h-40 overflow-y-auto">
+              </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-bold mb-2 mr-1">لون الأيقونة</label>
+              <input type="color" id="icon-color-input" class="w-full h-12 rounded-xl cursor-pointer bg-transparent border-none" onchange="setIconColor(this.value)">
+            </div>
+            <div>
+              <label class="block text-sm font-bold mb-2 mr-1">خلفية الأيقونة</label>
+              <input type="color" id="icon-bg-input" class="w-full h-12 rounded-xl cursor-pointer bg-transparent border-none" onchange="setIconBg(this.value)">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-bold mb-2 mr-1">تأثير الأيقونة</label>
+            <select id="icon-effect" class="apple-input w-full" onchange="setIconEffect(this.value)">
+              <option value="none">بدون تأثير</option>
+              <option value="glass">زجاجي (Glassmorphism)</option>
+              <option value="gradient">تدرج ناعم (Soft Gradient)</option>
+              <option value="glow">توهج (Soft Glow)</option>
+            </select>
+          </div>
+
+          <div class="flex gap-3 pt-4">
+            <button id="modal-save-btn" class="apple-button primary flex-1 py-4">حفظ</button>
+            <button onclick="ui.closeModal()" class="apple-button flex-1 py-4">إلغاء</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="confirm-modal" class="fixed inset-0 z-[400] hidden flex items-center justify-center p-6">
+      <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="ui.closeConfirm()"></div>
+      <div class="apple-card w-full max-w-xs p-8 relative z-10 shadow-2xl text-center">
+        <div class="w-16 h-16 bg-[var(--input-bg)] text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+          <i data-lucide="trash-2" class="w-8 h-8"></i>
+        </div>
+        <h3 class="text-xl font-bold mb-2">هل أنت متأكد؟</h3>
+        <p class="text-gray-500 mb-8">سيتم حذف هذا الرابط نهائياً ولا يمكن التراجع.</p>
+        <div class="flex gap-3">
+          <button id="confirm-yes" class="apple-button primary bg-red-500 hover:bg-red-600 flex-1 py-3">حذف</button>
+          <button onclick="ui.closeConfirm()" class="apple-button flex-1 py-3">إلغاء</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      // Logic for Theme Switching & Persistence
+      window.themes = {
+        set: (theme) => {
+          document.body.setAttribute('data-theme', theme);
+          localStorage.setItem('atheer-theme', theme);
+          // Update Lucide icons if any theme-specific changes needed
+          if (window.lucide) lucide.createIcons();
+        },
+        init: () => {
+          const saved = localStorage.getItem('atheer-theme') || 'light';
+          themes.set(saved);
+        }
+      };
+
+      // Navigation Logic (Simplified for GitHub Pages/Static)
+      window.router = {
+        navigate: (viewId) => {
+          document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+          const target = document.getElementById(`view-${viewId}`);
+          if (target) target.classList.add('active');
+        }
+      };
+
+      window.ui = {
+        toggleSidebar: () => {
+          document.getElementById('sidebar').classList.toggle('active');
+          document.getElementById('sidebar-overlay').classList.toggle('active');
+        },
+        closeModal: () => document.getElementById('modal-container').classList.add('hidden')
+      };
+
+      // Load icons and theme on start
+      document.addEventListener('DOMContentLoaded', () => {
+        themes.init();
+        if (window.lucide) lucide.createIcons();
+        setTimeout(() => {
+          document.getElementById('loading-overlay').style.opacity = '0';
+          setTimeout(() => document.getElementById('loading-overlay').remove(), 500);
+        }, 1000);
+      });
+    </script>
+    <script type="module" src="/src/app.js"></script>
+  </body>
+</html>
